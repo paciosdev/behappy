@@ -8,6 +8,11 @@
 import SwiftUI
 
 struct CameraView: View {
+    
+    let gradientSurface = LinearGradient(colors: [.yellow, .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
+    
+    let gradientBorder = LinearGradient(colors: [.yellow.opacity(0.5), .white.opacity(0.1), .black.opacity(0.1), .yellow.opacity(0.1), .yellow.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    
     var body: some View {
         ZStack {
             Image("notHappy")
@@ -15,28 +20,55 @@ struct CameraView: View {
                 .scaledToFill()
                 .ignoresSafeArea()
             
-            Button{
+            VStack {
+                Text("Smile")
+                    .font(.system(size:100))
+                    .fontWeight(.bold)
+                    .fontDesign(.rounded)
+                    .foregroundStyle(.ultraThinMaterial)
+                    .mask(
+                        Text("Smile")
+                            .font(.system(size:100))
+                            .fontWeight(.bold)
+                            .fontDesign(.rounded)
+                            .foregroundStyle(.yellow)
+                    )
+                    .overlay(
+                        Text("Smile")
+                            .font(.system(size:100))
+                            .fontWeight(.bold)
+                            .fontDesign(.rounded)
+                            .foregroundStyle(gradientBorder)
+                            .opacity(0.8)
+                    )
                 
-            }label:{
-                ZStack{
-                    GlassView()
-                    Text("Remind Me Later...")
+                Spacer()
+                Button{
                     
+                }label:{
+                    ZStack{
+                        GlassView()
+                        Text("Remind Me Later...")
+                            .fontDesign(.rounded)
+
+                        
+                    }
                 }
+                .foregroundStyle(.white)
             }
-            .foregroundStyle(.white)
         }
     }
 }
 
 struct GlassView: View {
     let gradientSurface = LinearGradient(colors: [.black.opacity(0.1), .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
-    let gradientBorder = LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.0), .black.opacity(0.0), .green.opacity(0.0), .green.opacity(0.0)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    let gradientBorder = LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.0), .black.opacity(0.0), .green.opacity(0.0), .yellow.opacity(0.0)], startPoint: .topLeading, endPoint: .bottomTrailing)
     
     var body: some View {
         RoundedRectangle(cornerRadius: 500, style: .continuous)
             .foregroundStyle(gradientSurface)
             .background(.ultraThinMaterial)
+        
             .mask( RoundedRectangle(cornerRadius: 500,
                    style: .circular).foregroundColor(.black) )
             .overlay(
