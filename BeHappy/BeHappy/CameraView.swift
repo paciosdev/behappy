@@ -9,33 +9,46 @@ import SwiftUI
 
 struct CameraView: View {
     
+    @Binding var image: CGImage?
+    
     let gradientSurface = LinearGradient(colors: [.yellow, .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
     
     let gradientBorder = LinearGradient(colors: [.yellow.opacity(0.5), .white.opacity(0.1), .black.opacity(0.1), .yellow.opacity(0.1), .yellow.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
     
     var body: some View {
         ZStack {
-            Image("notHappy")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+            Color.black.ignoresSafeArea()
+            GeometryReader { geometry in
+                        if let image = image {
+                            Image(decorative: image, scale: 1, orientation: .upMirrored)
+                                .resizable()
+                                .rotationEffect(Angle(degrees: -90))
+                                .scaledToFill()
+                                .frame(width: geometry.size.width,
+                                       height: geometry.size.height)
+                        } else {
+                            ContentUnavailableView("No camera feed", systemImage: "xmark.circle.fill")
+                                .frame(width: geometry.size.width,
+                                       height: geometry.size.height)
+                        }
+                    }
             
             VStack {
-                Text("Smile")
-                    .font(.system(size:100))
+                Text("Smile now")
+                    .font(.system(size:70))
                     .fontWeight(.bold)
                     .fontDesign(.rounded)
-                    .foregroundStyle(.ultraThinMaterial)
+                    .foregroundStyle(.white)
                     .mask(
-                        Text("Smile")
-                            .font(.system(size:100))
+                        Text("Smile now")
+                            .font(.system(size:70))
                             .fontWeight(.bold)
                             .fontDesign(.rounded)
                             .foregroundStyle(.yellow)
                     )
                     .overlay(
-                        Text("Smile")
-                            .font(.system(size:100))
+                        Text("Smile now")
+                            .font(.system(size:70))
                             .fontWeight(.bold)
                             .fontDesign(.rounded)
                             .foregroundStyle(gradientBorder)
@@ -86,5 +99,5 @@ struct GlassView: View {
 }
 
 #Preview {
-    CameraView()
+    CameraView(image: .constant(nil))
 }
