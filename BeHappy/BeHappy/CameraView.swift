@@ -11,7 +11,7 @@ struct CameraView: View {
     
     let gradientSurface = LinearGradient(colors: [.yellow, .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
     
-    let gradientBorder = LinearGradient(colors: [.yellow.opacity(0.5), .white.opacity(0.1), .black.opacity(0.1), .yellow.opacity(0.1), .yellow.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    let gradientBorder = LinearGradient(colors: [.yellow.opacity(0.5), .white.opacity(0.1), .black.opacity(0.1), .yellow.opacity(0.1), .yellow.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
     
     var body: some View {
         ZStack {
@@ -41,6 +41,8 @@ struct CameraView: View {
                             .foregroundStyle(gradientBorder)
                             .opacity(0.8)
                     )
+                    .shadow(radius: 5)
+                    .opacity(0.8)
                 
                 Spacer()
                 Button{
