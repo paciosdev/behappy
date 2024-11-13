@@ -12,7 +12,7 @@ struct ContentView: View {
     @State private var viewModel = ViewModel()
     
     var body: some View {
-        CameraView(image: $viewModel.currentFrame)
+        CameraView(image: $viewModel.currentFrame, prediction: $viewModel.prediction)
     }
 }
 

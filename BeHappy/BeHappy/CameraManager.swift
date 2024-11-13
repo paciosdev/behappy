@@ -1,107 +1,101 @@
-//
-//  CameraManager.swift
-//  BeHappy
-//
-//  Created by Francesco Paciello on 12/11/24.
-//
-
-
 import Foundation
 import AVFoundation
+import CoreML
+import Vision
 
 class CameraManager: NSObject {
     
-    // 1.
     private let captureSession = AVCaptureSession()
-    // 2.
     private var deviceInput: AVCaptureDeviceInput?
-    // 3.
     private var videoOutput: AVCaptureVideoDataOutput?
-    // 4.
     private let systemPreferredCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
-    // 5.
     private var sessionQueue = DispatchQueue(label: "video.preview.session")
     
     private var isAuthorized: Bool {
-            get async {
-                let status = AVCaptureDevice.authorizationStatus(for: .video)
-                
-                // Determine if the user previously authorized camera access.
-                var isAuthorized = status == .authorized
-                
-                // If the system hasn't determined the user's authorization status,
-                // explicitly prompt them for approval.
-                if status == .notDetermined {
-                    isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
-                }
-                
-                return isAuthorized
+        get async {
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            var isAuthorized = status == .authorized
+            if status == .notDetermined {
+                isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
             }
+            return isAuthorized
         }
+    }
     
     private var addToPreviewStream: ((CGImage) -> Void)?
-        
-        lazy var previewStream: AsyncStream<CGImage> = {
-            AsyncStream { continuation in
-                addToPreviewStream = { cgImage in
-                    continuation.yield(cgImage)
-                }
-            }
-        }()
-    
-    // 1.
-        override init() {
-            super.init()
-            
-            Task {
-                await configureSession()
-                await startSession()
+    lazy var previewStream: AsyncStream<CGImage> = {
+        AsyncStream { continuation in
+            addToPreviewStream = { cgImage in
+                continuation.yield(cgImage)
             }
         }
+    }()
+    
+    // ML Model and prediction-related variables
+    private var frameCounter = 0
+    private let model: VNCoreMLModel? = {
+        // Load your CoreML model
+        guard let model = try? BeHappy(configuration: MLModelConfiguration()).model else {
+            print("Failed to load the model")
+            return nil
+        }
+        return try? VNCoreMLModel(for: model)
+    }()
+    
+    private let predictionQueue = DispatchQueue(label: "com.behappy.predictionQueue")
+    @Published var predictionResult: String? // Published to bind with CameraView
+    
+    override init() {
+        super.init()
         
+        Task {
+            await configureSession()
+            await startSession()
+        }
+    }
+    
     private func configureSession() async {
-        // 1.
         guard await isAuthorized,
               let systemPreferredCamera,
               let deviceInput = try? AVCaptureDeviceInput(device: systemPreferredCamera)
         else { return }
         
-        // 2.
         captureSession.beginConfiguration()
+        defer { self.captureSession.commitConfiguration() }
         
-        // 3.
-        defer {
-            self.captureSession.commitConfiguration()
-        }
-        
-        // 4.
         let videoOutput = AVCaptureVideoDataOutput()
         videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
         
-        // 5.
-        guard captureSession.canAddInput(deviceInput) else {
-            print("Unable to add device input to capture session.")
+        guard captureSession.canAddInput(deviceInput), captureSession.canAddOutput(videoOutput) else {
+            print("Unable to add input/output to capture session.")
             return
         }
         
-        // 6.
-        guard captureSession.canAddOutput(videoOutput) else {
-            print("Unable to add video output to capture session.")
-            return
-        }
-        
-        // 7.
         captureSession.addInput(deviceInput)
         captureSession.addOutput(videoOutput)
-        
     }
-        
+    
     private func startSession() async {
-            /// Checking authorization
-            guard await isAuthorized else { return }
-            /// Start the capture session flow of data
-            captureSession.startRunning()
+        guard await isAuthorized else { return }
+        captureSession.startRunning()
+    }
+    
+    private func performPrediction(for cgImage: CGImage) {
+        predictionQueue.async {
+            let request = VNCoreMLRequest(model: self.model!) { [weak self] request, _ in
+                guard let observations = request.results as? [VNClassificationObservation],
+                      let bestResult = observations.first else {
+                          return
+                      }
+                DispatchQueue.main.async {
+                    self?.predictionResult = bestResult.identifier
+                }
+            }
+            
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
         }
+    }
 }
 
 extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -110,7 +104,39 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
                        didOutput sampleBuffer: CMSampleBuffer,
                        from connection: AVCaptureConnection) {
         guard let currentFrame = sampleBuffer.cgImage else { return }
+        
         addToPreviewStream?(currentFrame)
+        // Increment the frame counter and perform inference every 5th frame
+        frameCounter += 1
+        if frameCounter % 5 == 0 {
+            frameCounter = 0 // Reset counter
+            performPrediction(for: currentFrame)
+            detectFaces(in: currentFrame)
+
+        }
     }
     
+    private func detectFaces(in image: CGImage) {
+            let faceDetectionRequest = VNDetectFaceRectanglesRequest { request, error in
+                guard let results = request.results as? [VNFaceObservation], error == nil else {
+                    print("Face detection error: \(String(describing: error))")
+                    return
+                }
+                
+                // Process detected faces
+                for faceObservation in results {
+                    print("Detected face at \(faceObservation.boundingBox)")
+                    // You can draw rectangles around faces here or update the UI
+                    
+                    //do ml stuffs
+                }
+            }
+            
+            let requestHandler = VNImageRequestHandler(cgImage: image, options: [:])
+            do {
+                try requestHandler.perform([faceDetectionRequest])
+            } catch {
+                print("Failed to perform face detection: \(error)")
+            }
+        }
 }

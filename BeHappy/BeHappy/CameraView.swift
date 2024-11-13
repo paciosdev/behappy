@@ -10,45 +10,43 @@ import SwiftUI
 struct CameraView: View {
     
     @Binding var image: CGImage?
-    
+    @Binding var prediction: String? // Bind to show predictions if needed
+
     let gradientSurface = LinearGradient(colors: [.yellow, .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
-    
     let gradientBorder = LinearGradient(colors: [.yellow.opacity(0.5), .white.opacity(0.1), .black.opacity(0.1), .yellow.opacity(0.1), .yellow.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             GeometryReader { geometry in
-                        if let image = image {
-                            Image(decorative: image, scale: 1, orientation: .upMirrored)
-                                .resizable()
-                                .rotationEffect(Angle(degrees: -90))
-                                .scaledToFill()
-                                .frame(width: geometry.size.width,
-                                       height: geometry.size.height)
-                        } else {
-                            ContentUnavailableView("No camera feed", systemImage: "xmark.circle.fill")
-                                .frame(width: geometry.size.width,
-                                       height: geometry.size.height)
-                        }
-                    }
+                if let image = image {
+                    Image(decorative: image, scale: 1, orientation: .upMirrored)
+                        .resizable()
+                        .rotationEffect(Angle(degrees: -90))
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    ContentUnavailableView("No camera feed", systemImage: "xmark.circle.fill")
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                }
+            }
             
             VStack {
-                Text("Smile now")
-                    .font(.system(size:70))
+                Text("Smile")
+                    .font(.system(size: 70))
                     .fontWeight(.bold)
                     .fontDesign(.rounded)
                     .foregroundStyle(.white)
                     .mask(
-                        Text("Smile now")
-                            .font(.system(size:70))
+                        Text("Smile")
+                            .font(.system(size: 70))
                             .fontWeight(.bold)
                             .fontDesign(.rounded)
                             .foregroundStyle(.yellow)
                     )
                     .overlay(
-                        Text("Smile now")
-                            .font(.system(size:70))
+                        Text("Smile")
+                            .font(.system(size: 70))
                             .fontWeight(.bold)
                             .fontDesign(.rounded)
                             .foregroundStyle(gradientBorder)
@@ -58,15 +56,21 @@ struct CameraView: View {
                     .opacity(0.8)
                 
                 Spacer()
-                Button{
-                    
-                }label:{
-                    ZStack{
+                
+                if let prediction = prediction {
+                    Text("Prediction: \(prediction)")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .padding()
+                }
+                
+                Button {
+                    // Button action here
+                } label: {
+                    ZStack {
                         GlassView()
                         Text("Remind Me Later...")
                             .fontDesign(.rounded)
-
-                        
                     }
                 }
                 .foregroundStyle(.white)
@@ -99,5 +103,5 @@ struct GlassView: View {
 }
 
 #Preview {
-    CameraView(image: .constant(nil))
+    CameraView(image: .constant(nil), prediction:.constant(nil))
 }
