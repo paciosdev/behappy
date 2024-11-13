@@ -46,6 +46,11 @@ class CameraManager: NSObject {
     private let predictionQueue = DispatchQueue(label: "com.behappy.predictionQueue")
     @Published var predictionResult: String? // Published to bind with CameraView
     
+    private var smileTimer: Timer?
+    private var timerStartDate: Date?
+    private let smileDuration: TimeInterval = 3.0 // Duration to detect a sustained smile
+    private var isCapturingPhoto = false
+    
     override init() {
         super.init()
         
@@ -81,41 +86,54 @@ class CameraManager: NSObject {
         captureSession.startRunning()
     }
     
-
-    
     private func performPrediction(for cgImage: CGImage) {
         predictionQueue.async {
             let request = VNCoreMLRequest(model: self.model!) { [weak self] request, _ in
                 guard let observations = request.results as? [VNClassificationObservation],
                       let bestResult = observations.first else {
-                          return
-                      }
+                    return
+                }
+                
                 DispatchQueue.main.async {
-                    self?.predictionResult = bestResult.identifier
-                    
-                    
-                    //check if there is a smile
-                    if self?.predictionResult == "smile"{
-                        print("Capturing")
-                        let uiImageFromCGImage = UIImage(cgImage: cgImage, scale: 1, orientation: .right)
-                        
-                        
-                        //start a timer
-                        
-                        
-                        
-                        //save photo to library
-                        UIImageWriteToSavedPhotosAlbum(uiImageFromCGImage, nil, nil, nil)
-                        
-                        
-                        
-                    }
+                    self?.handlePredictionResult(bestResult.identifier, cgImage: cgImage)
                 }
             }
             
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             try? handler.perform([request])
         }
+    }
+    
+    private func handlePredictionResult(_ result: String, cgImage: CGImage) {
+        predictionResult = result
+        
+        if result == "smile" {
+            if smileTimer == nil {
+                // Start a new timer if one isn't already running
+                timerStartDate = Date()
+                smileTimer = Timer.scheduledTimer(withTimeInterval: smileDuration, repeats: false) { [weak self] _ in
+                    self?.capturePhoto(cgImage)
+                    self?.smileTimer = nil
+                }
+            }
+        } else {
+            // Reset the timer if the user stops smiling
+            smileTimer?.invalidate()
+            smileTimer = nil
+            timerStartDate = nil
+        }
+    }
+    
+    private func capturePhoto(_ cgImage: CGImage) {
+        guard !isCapturingPhoto else { return }
+        isCapturingPhoto = true
+        
+        let uiImageFromCGImage = UIImage(cgImage: cgImage, scale: 1, orientation: .right)
+        UIImageWriteToSavedPhotosAlbum(uiImageFromCGImage, nil, nil, nil)
+        
+        // Reset capturing state
+        isCapturingPhoto = false
+        print("Photo saved.")
     }
 }
 
@@ -136,26 +154,29 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     private func detectFaces(in image: CGImage) {
-            let faceDetectionRequest = VNDetectFaceRectanglesRequest { request, error in
-                guard let results = request.results as? [VNFaceObservation], error == nil else {
-                    print("Face detection error: \(String(describing: error))")
-                    return
-                }
-                
+        let faceDetectionRequest = VNDetectFaceRectanglesRequest { request, error in
+            guard let results = request.results as? [VNFaceObservation], error == nil else {
+                print("Face detection error: \(String(describing: error))")
+                return
+            }
+            
+            if results.isEmpty {
+                print("No face detected")
+            } else {
                 // Process detected faces
-                for faceObservation in results {
-                    print("Detected face at \(faceObservation.boundingBox)")
-                    // You can draw rectangles around faces here or update the UI
-                    
+                for _ in results {
+                    //print("Detected face at \(faceObservation.boundingBox)")
                     self.performPrediction(for: image)
                 }
             }
             
-            let requestHandler = VNImageRequestHandler(cgImage: image, options: [:])
-            do {
-                try requestHandler.perform([faceDetectionRequest])
-            } catch {
-                print("Failed to perform face detection: \(error)")
-            }
         }
+        
+        let requestHandler = VNImageRequestHandler(cgImage: image, options: [:])
+        do {
+            try requestHandler.perform([faceDetectionRequest])
+        } catch {
+            print("Failed to perform face detection: \(error)")
+        }
+    }
 }
