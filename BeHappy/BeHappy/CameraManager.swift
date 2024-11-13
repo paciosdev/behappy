@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import CoreML
 import Vision
+import SwiftUI
 
 class CameraManager: NSObject {
     
@@ -80,6 +81,8 @@ class CameraManager: NSObject {
         captureSession.startRunning()
     }
     
+
+    
     private func performPrediction(for cgImage: CGImage) {
         predictionQueue.async {
             let request = VNCoreMLRequest(model: self.model!) { [weak self] request, _ in
@@ -89,6 +92,24 @@ class CameraManager: NSObject {
                       }
                 DispatchQueue.main.async {
                     self?.predictionResult = bestResult.identifier
+                    
+                    
+                    //check if there is a smile
+                    if self?.predictionResult == "smile"{
+                        print("Capturing")
+                        let uiImageFromCGImage = UIImage(cgImage: cgImage, scale: 1, orientation: .right)
+                        
+                        
+                        //start a timer
+                        
+                        
+                        
+                        //save photo to library
+                        UIImageWriteToSavedPhotosAlbum(uiImageFromCGImage, nil, nil, nil)
+                        
+                        
+                        
+                    }
                 }
             }
             
@@ -110,9 +131,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
         frameCounter += 1
         if frameCounter % 5 == 0 {
             frameCounter = 0 // Reset counter
-            performPrediction(for: currentFrame)
             detectFaces(in: currentFrame)
-
         }
     }
     
@@ -128,7 +147,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
                     print("Detected face at \(faceObservation.boundingBox)")
                     // You can draw rectangles around faces here or update the UI
                     
-                    //do ml stuffs
+                    self.performPrediction(for: image)
                 }
             }
             
