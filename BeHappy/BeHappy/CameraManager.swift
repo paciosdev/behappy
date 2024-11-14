@@ -35,7 +35,6 @@ class CameraManager: NSObject {
     // ML Model and prediction-related variables
     private var frameCounter = 0
     private let model: VNCoreMLModel? = {
-        // Load your CoreML model
         guard let model = try? BeHappy(configuration: MLModelConfiguration()).model else {
             print("Failed to load the model")
             return nil
@@ -47,8 +46,8 @@ class CameraManager: NSObject {
     @Published var predictionResult: String? // Published to bind with CameraView
     
     private var smileTimer: Timer?
-    private var timerStartDate: Date?
-    private let smileDuration: TimeInterval = 3.0 // Duration to detect a sustained smile
+    private var smileDurationCounter = 0
+    private let smileDurationTarget = 3 // in seconds
     private var isCapturingPhoto = false
     
     override init() {
@@ -108,20 +107,38 @@ class CameraManager: NSObject {
         predictionResult = result
         
         if result == "smile" {
-            if smileTimer == nil {
-                // Start a new timer if one isn't already running
-                timerStartDate = Date()
-                smileTimer = Timer.scheduledTimer(withTimeInterval: smileDuration, repeats: false) { [weak self] _ in
-                    self?.capturePhoto(cgImage)
-                    self?.smileTimer = nil
+            startSmileTimer(with: cgImage)
+        } else {
+            resetSmileTimer()
+        }
+    }
+    
+    private func startSmileTimer(with cgImage: CGImage) {
+        if smileTimer == nil {
+            print("Starting smile timer...")
+            smileTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+                guard let self = self else { return }
+                
+                if self.predictionResult == "smile" {
+                    self.smileDurationCounter += 1
+                    print("Smile sustained for \(self.smileDurationCounter) seconds")
+                    
+                    if self.smileDurationCounter >= self.smileDurationTarget {
+                        self.capturePhoto(cgImage)
+                        self.resetSmileTimer()
+                    }
+                } else {
+                    self.resetSmileTimer()
                 }
             }
-        } else {
-            // Reset the timer if the user stops smiling
-            smileTimer?.invalidate()
-            smileTimer = nil
-            timerStartDate = nil
         }
+    }
+    
+    private func resetSmileTimer() {
+        smileTimer?.invalidate()
+        smileTimer = nil
+        smileDurationCounter = 0
+        print("Smile timer reset.")
     }
     
     private func capturePhoto(_ cgImage: CGImage) {
@@ -131,7 +148,6 @@ class CameraManager: NSObject {
         let uiImageFromCGImage = UIImage(cgImage: cgImage, scale: 1, orientation: .right)
         UIImageWriteToSavedPhotosAlbum(uiImageFromCGImage, nil, nil, nil)
         
-        // Reset capturing state
         isCapturingPhoto = false
         print("Photo saved.")
     }
@@ -145,10 +161,9 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
         guard let currentFrame = sampleBuffer.cgImage else { return }
         
         addToPreviewStream?(currentFrame)
-        // Increment the frame counter and perform inference every 5th frame
         frameCounter += 1
         if frameCounter % 5 == 0 {
-            frameCounter = 0 // Reset counter
+            frameCounter = 0
             detectFaces(in: currentFrame)
         }
     }
@@ -162,14 +177,12 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
             
             if results.isEmpty {
                 print("No face detected")
+                self.resetSmileTimer()
             } else {
-                // Process detected faces
                 for _ in results {
-                    //print("Detected face at \(faceObservation.boundingBox)")
                     self.performPrediction(for: image)
                 }
             }
-            
         }
         
         let requestHandler = VNImageRequestHandler(cgImage: image, options: [:])

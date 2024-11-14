@@ -252,7 +252,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BeHappy/Preview Content\"";
-				DEVELOPMENT_TEAM = TAA3DBL33R;
+				DEVELOPMENT_TEAM = 59ZWFH5UYB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need to access your camera";
@@ -283,7 +283,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BeHappy/Preview Content\"";
-				DEVELOPMENT_TEAM = TAA3DBL33R;
+				DEVELOPMENT_TEAM = 59ZWFH5UYB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need to access your camera";
