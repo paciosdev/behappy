@@ -11,7 +11,13 @@ struct CameraView: View {
     
     @Binding var image: CGImage?
     @Binding var prediction: String? // Bind to show predictions if needed
-
+    @Binding var smileDurationCounter: Int
+    @Environment(\.presentationMode) var mode
+    
+    var remainingSeconds: Int{
+        3 - smileDurationCounter
+    }
+    
     let gradientSurface = LinearGradient(colors: [.yellow, .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
     let gradientBorder = LinearGradient(colors: [.yellow.opacity(0.5), .white.opacity(0.1), .black.opacity(0.1), .yellow.opacity(0.1), .yellow.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing)
     
@@ -20,10 +26,12 @@ struct CameraView: View {
             Color.black.ignoresSafeArea()
             GeometryReader { geometry in
                 if let image = image {
-                    Image(decorative: image, scale: 1, orientation: .upMirrored)
+                    Image(decorative: image, scale: 1, orientation: .leftMirrored)
+                    
                         .resizable()
-                        .rotationEffect(Angle(degrees: -90))
                         .scaledToFill()
+                        .ignoresSafeArea(.all)
+
                         .frame(width: geometry.size.width, height: geometry.size.height)
                 } else {
                     ContentUnavailableView("No camera feed", systemImage: "xmark.circle.fill")
@@ -36,26 +44,23 @@ struct CameraView: View {
                     .font(.system(size: 70))
                     .fontWeight(.bold)
                     .fontDesign(.rounded)
-                    .foregroundStyle(.white)
-                    .mask(
-                        Text("Smile")
-                            .font(.system(size: 70))
-                            .fontWeight(.bold)
-                            .fontDesign(.rounded)
-                            .foregroundStyle(.yellow)
-                    )
-                    .overlay(
-                        Text("Smile")
-                            .font(.system(size: 70))
-                            .fontWeight(.bold)
-                            .fontDesign(.rounded)
-                            .foregroundStyle(gradientBorder)
-                            .opacity(0.8)
-                    )
-                    .shadow(radius: 5)
-                    .opacity(0.8)
+                    .foregroundStyle(.yellow)
+                    .shadow(radius: 10)
+                    
                 
                 Spacer()
+                
+                if remainingSeconds < 3{
+                    Text("\(remainingSeconds)")
+                        .font(.system(size: 130))
+                        .bold()
+                        .foregroundStyle(Color.white.opacity(0.7))
+                        .padding(.bottom, 80)
+                }
+                
+                
+                
+                
                 
                 if let prediction = prediction {
                     Text("Prediction: \(prediction)")
@@ -65,7 +70,7 @@ struct CameraView: View {
                 }
                 
                 Button {
-                    // Button action here
+                    mode.wrappedValue.dismiss()
                 } label: {
                     ZStack {
                         GlassView()
@@ -103,5 +108,5 @@ struct GlassView: View {
 }
 
 #Preview {
-    CameraView(image: .constant(nil), prediction:.constant(nil))
+    CameraView(image: .constant(nil), prediction:.constant(nil), smileDurationCounter: .constant(3))
 }

@@ -46,7 +46,7 @@ class CameraManager: NSObject {
     @Published var predictionResult: String? // Published to bind with CameraView
     
     private var smileTimer: Timer?
-    private var smileDurationCounter = 0
+    @Published var smileDurationCounter = 0
     private let smileDurationTarget = 3 // in seconds
     private var isCapturingPhoto = false
     
