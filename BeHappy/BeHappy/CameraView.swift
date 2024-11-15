@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct CameraView: View {
-    
-    @Binding var image: CGImage?
-    @Binding var prediction: String? // Bind to show predictions if needed
-    @Binding var smileDurationCounter: Int
+    @State private var viewModel = ViewModel()
+
+
     @Environment(\.presentationMode) var mode
     
     var remainingSeconds: Int{
-        3 - smileDurationCounter
+        3 - viewModel.smileDurationCounter
     }
     
     let gradientSurface = LinearGradient(colors: [.yellow, .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -25,7 +24,7 @@ struct CameraView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             GeometryReader { geometry in
-                if let image = image {
+                if let image = viewModel.currentFrame {
                     Image(decorative: image, scale: 1, orientation: .leftMirrored)
                     
                         .resizable()
@@ -62,12 +61,12 @@ struct CameraView: View {
                 
                 
                 
-                if let prediction = prediction {
-                    Text("Prediction: \(prediction)")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .padding()
-                }
+//                if let prediction = prediction {
+//                    Text("Prediction: \(prediction)")
+//                        .font(.headline)
+//                        .foregroundStyle(.white)
+//                        .padding()
+//                }
                 
                 Button {
                     mode.wrappedValue.dismiss()
@@ -80,6 +79,8 @@ struct CameraView: View {
                 }
                 .foregroundStyle(.white)
             }
+        }.onDisappear() {
+            viewModel.stopSession()
         }
     }
 }
@@ -108,5 +109,5 @@ struct GlassView: View {
 }
 
 #Preview {
-    CameraView(image: .constant(nil), prediction:.constant(nil), smileDurationCounter: .constant(3))
+    CameraView()
 }

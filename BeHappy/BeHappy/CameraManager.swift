@@ -57,6 +57,7 @@ class CameraManager: NSObject {
             await configureSession()
             await startSession()
         }
+        
     }
     
     private func configureSession() async {
@@ -83,6 +84,10 @@ class CameraManager: NSObject {
     private func startSession() async {
         guard await isAuthorized else { return }
         captureSession.startRunning()
+    }
+    
+    func stopSession() {
+        captureSession.stopRunning()
     }
     
     private func performPrediction(for cgImage: CGImage) {

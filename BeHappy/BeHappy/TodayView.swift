@@ -10,7 +10,6 @@ import SwiftUI
 struct TodayView: View {
     
     @State private var showCamera = false
-    @State private var viewModel = ViewModel()
     
     var body: some View {
         NavigationStack{
@@ -53,7 +52,7 @@ struct TodayView: View {
                     .frame(width: 254, height: 59)
                     .padding(.bottom, 40)
                     .fullScreenCover(isPresented: $showCamera) {
-                        CameraView(image: $viewModel.currentFrame, prediction: $viewModel.prediction, smileDurationCounter: $viewModel.smileDurationCounter)
+                        CameraView()
                     }
                 }
             }
