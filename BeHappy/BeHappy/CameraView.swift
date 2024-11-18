@@ -9,8 +9,6 @@ import SwiftUI
 
 struct CameraView: View {
     @State private var viewModel = ViewModel()
-
-
     @Environment(\.presentationMode) var mode
     
     var remainingSeconds: Int{
@@ -23,63 +21,67 @@ struct CameraView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            GeometryReader { geometry in
-                if let image = viewModel.currentFrame {
-                    Image(decorative: image, scale: 1, orientation: .leftMirrored)
-                    
-                        .resizable()
-                        .scaledToFill()
-                        .ignoresSafeArea(.all)
-
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                } else {
-                    ContentUnavailableView("No camera feed", systemImage: "xmark.circle.fill")
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                }
-            }
-            
-            VStack {
-                Text("Smile")
-                    .font(.system(size: 70))
-                    .fontWeight(.bold)
-                    .fontDesign(.rounded)
-                    .foregroundStyle(.yellow)
-                    .shadow(radius: 10)
-                    
-                
-                Spacer()
-                
-                if remainingSeconds < 3{
-                    Text("\(remainingSeconds)")
-                        .font(.system(size: 130))
-                        .bold()
-                        .foregroundStyle(Color.white.opacity(0.7))
-                        .padding(.bottom, 80)
-                }
-                
-                
-                
-                
-                
-//                if let prediction = prediction {
-//                    Text("Prediction: \(prediction)")
-//                        .font(.headline)
-//                        .foregroundStyle(.white)
-//                        .padding()
-//                }
-                
-                Button {
-                    mode.wrappedValue.dismiss()
-                } label: {
-                    ZStack {
-                        GlassView()
-                        Text("Remind Me Later...")
-                            .fontDesign(.rounded)
+            if !viewModel.photoWasSaved{
+                GeometryReader { geometry in
+                    if let image = viewModel.currentFrame {
+                        Image(decorative: image, scale: 1, orientation: .leftMirrored)
+                            .resizable()
+                            .scaledToFill()
+                            .ignoresSafeArea(.all)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                    } else {
+                        ContentUnavailableView("No camera feed", systemImage: "xmark.circle.fill")
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                     }
                 }
-                .foregroundStyle(.white)
+                
+                VStack {
+                    Text("Smile")
+                        .font(.system(size: 70))
+                        .fontWeight(.bold)
+                        .fontDesign(.rounded)
+                        .foregroundStyle(.yellow)
+                        .shadow(radius: 10)
+                        
+                    
+                    Spacer()
+                    
+                    if remainingSeconds < 3{
+                        Text("\(remainingSeconds)")
+                            .font(.system(size: 130))
+                            .bold()
+                            .foregroundStyle(Color.white.opacity(0.7))
+                            .padding(.bottom, 80)
+                    }
+                    
+                    
+                    
+                    
+                    
+    //                if let prediction = prediction {
+    //                    Text("Prediction: \(prediction)")
+    //                        .font(.headline)
+    //                        .foregroundStyle(.white)
+    //                        .padding()
+    //                }
+                    
+                    Button {
+                        mode.wrappedValue.dismiss()
+                    } label: {
+                        ZStack {
+                            GlassView()
+                            Text("Remind Me Later...")
+                                .fontDesign(.rounded)
+                        }
+                    }
+                    .foregroundStyle(.white)
+                }
+            }else{
+                Text("Photo was made!")
+                    .foregroundStyle(.main)
             }
-        }.onDisappear() {
+        }
+        .onDisappear() {
             viewModel.stopSession()
         }
     }

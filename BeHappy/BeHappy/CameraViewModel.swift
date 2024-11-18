@@ -14,26 +14,34 @@ import Combine
 class ViewModel {
     var currentFrame: CGImage?
     var prediction: String?
-    
+    var photoWasSaved: Bool = false
     var smileDurationCounter = -1
-    private let cameraManager = CameraManager()
-    private var cancellable: AnyCancellable? // Store the sink subscription
-
+    let cameraManager = CameraManager()
+    
+    private var cancellablePrediction: AnyCancellable? // Store the sink subscription
+    private var cancellableDuration: AnyCancellable? // Store the sink subscription
+    private var cancellableSaved: AnyCancellable? // Store the sink subscription
     
     init() {
         Task {
             await handleCameraPreviews()
         }
         
-        cancellable = cameraManager.$predictionResult.sink { [weak self] result in
+        cancellablePrediction = cameraManager.$predictionResult.sink { [weak self] result in
             Task { @MainActor in
                 self?.prediction = result
             }
         }
         
-        cancellable = cameraManager.$smileDurationCounter.sink { [weak self] result in
+        cancellableDuration = cameraManager.$smileDurationCounter.sink { [weak self] result in
             Task { @MainActor in
                 self?.smileDurationCounter = result
+            }
+        }
+        
+        cancellableSaved = cameraManager.$photoWasSaved.sink { [weak self] result in
+            Task { @MainActor in
+                self?.photoWasSaved = result
             }
         }
     }

@@ -47,8 +47,11 @@ class CameraManager: NSObject {
     
     private var smileTimer: Timer?
     @Published var smileDurationCounter = 0
+    @Published var photoWasSaved = false
     private let smileDurationTarget = 3 // in seconds
     private var isCapturingPhoto = false
+    
+    
     
     override init() {
         super.init()
@@ -154,6 +157,8 @@ class CameraManager: NSObject {
         UIImageWriteToSavedPhotosAlbum(uiImageFromCGImage, nil, nil, nil)
         
         isCapturingPhoto = false
+        photoWasSaved = true
+        self.stopSession()
         print("Photo saved.")
     }
 }
