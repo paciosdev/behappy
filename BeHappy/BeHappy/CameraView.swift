@@ -55,17 +55,8 @@ struct CameraView: View {
                     }
                     
                     
-                    
-                    
-                    
-    //                if let prediction = prediction {
-    //                    Text("Prediction: \(prediction)")
-    //                        .font(.headline)
-    //                        .foregroundStyle(.white)
-    //                        .padding()
-    //                }
-                    
                     Button {
+                        viewModel.stopSession()
                         mode.wrappedValue.dismiss()
                     } label: {
                         ZStack {
@@ -76,14 +67,14 @@ struct CameraView: View {
                     }
                     .foregroundStyle(.white)
                 }
-            }else{
-                Text("Photo was made!")
-                    .foregroundStyle(.main)
+            }
+            else{
+                if let image = viewModel.image {
+                    PhotoPreview(viewModel: viewModel, image: image, photoWasSaved: $viewModel.photoWasSaved)
+                }
             }
         }
-        .onDisappear() {
-            viewModel.stopSession()
-        }
+       
     }
 }
 

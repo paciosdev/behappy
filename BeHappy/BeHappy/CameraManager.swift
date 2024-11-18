@@ -48,6 +48,7 @@ class CameraManager: NSObject {
     private var smileTimer: Timer?
     @Published var smileDurationCounter = 0
     @Published var photoWasSaved = false
+    @Published var image: UIImage?
     private let smileDurationTarget = 3 // in seconds
     private var isCapturingPhoto = false
     
@@ -84,7 +85,7 @@ class CameraManager: NSObject {
         captureSession.addOutput(videoOutput)
     }
     
-    private func startSession() async {
+    func startSession() async {
         guard await isAuthorized else { return }
         captureSession.startRunning()
     }
@@ -155,6 +156,8 @@ class CameraManager: NSObject {
         
         let uiImageFromCGImage = UIImage(cgImage: cgImage, scale: 1, orientation: .right)
         UIImageWriteToSavedPhotosAlbum(uiImageFromCGImage, nil, nil, nil)
+
+        image = uiImageFromCGImage
         
         isCapturingPhoto = false
         photoWasSaved = true

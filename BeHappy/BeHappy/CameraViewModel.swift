@@ -9,6 +9,7 @@ import Foundation
 import CoreImage
 import Observation
 import Combine
+import UIKit
 
 @Observable
 class ViewModel {
@@ -16,11 +17,13 @@ class ViewModel {
     var prediction: String?
     var photoWasSaved: Bool = false
     var smileDurationCounter = -1
+    var image: UIImage?
     let cameraManager = CameraManager()
     
     private var cancellablePrediction: AnyCancellable? // Store the sink subscription
     private var cancellableDuration: AnyCancellable? // Store the sink subscription
     private var cancellableSaved: AnyCancellable? // Store the sink subscription
+    private var cancellableImage: AnyCancellable? // Store the sink subscription
     
     init() {
         Task {
@@ -42,6 +45,12 @@ class ViewModel {
         cancellableSaved = cameraManager.$photoWasSaved.sink { [weak self] result in
             Task { @MainActor in
                 self?.photoWasSaved = result
+            }
+        }
+        
+        cancellableImage = cameraManager.$image.sink { [weak self] result in
+            Task { @MainActor in
+                self?.image = result
             }
         }
     }
