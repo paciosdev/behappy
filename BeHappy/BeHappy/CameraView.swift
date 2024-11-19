@@ -30,13 +30,13 @@ struct CameraView: View {
                             .ignoresSafeArea(.all)
                             .frame(width: geometry.size.width, height: geometry.size.height)
                     } else {
-                        ContentUnavailableView("No camera feed", systemImage: "xmark.circle.fill")
+                        ProgressView()
                             .frame(width: geometry.size.width, height: geometry.size.height)
                     }
                 }
                 
                 VStack {
-                    Text("Smile")
+                    Text(remainingSeconds < 3 ? "Keep smile" : "Smile")
                         .font(.system(size: 70))
                         .fontWeight(.bold)
                         .fontDesign(.rounded)
@@ -54,18 +54,20 @@ struct CameraView: View {
                             .padding(.bottom, 80)
                     }
                     
-                    
-                    Button {
-                        viewModel.stopSession()
-                        mode.wrappedValue.dismiss()
-                    } label: {
-                        ZStack {
-                            GlassView()
-                            Text("Remind Me Later...")
-                                .fontDesign(.rounded)
+                    if remainingSeconds >= 3{
+                        Button {
+                            viewModel.stopSession()
+                            mode.wrappedValue.dismiss()
+                        } label: {
+                            ZStack {
+                                GlassView()
+                                Text("Remind Me Later...")
+                                    .fontDesign(.rounded)
+                            }
                         }
+                        .foregroundStyle(.white)
                     }
-                    .foregroundStyle(.white)
+                    
                 }
             }
             else{

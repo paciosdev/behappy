@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct PhotoPreview: View {
     
@@ -13,13 +14,28 @@ struct PhotoPreview: View {
     let image: UIImage
     @Binding var photoWasSaved: Bool
     @Environment(\.presentationMode) var mode
+    @State var player: AVAudioPlayer? = AVAudioPlayer()
+    @State private var vibrate = false
+    
+    var cgImage: CGImage? {
+        guard let ciImage = CIImage(image: self.image) else {
+            return nil
+        }
+        
+        let context = CIContext(options: nil)
+        return context.createCGImage(ciImage, from: ciImage.extent)
+    }
     
     var body: some View {
         ZStack(alignment: .bottom){
-            Image(uiImage: image)
-                .resizable()
             
-                .scaledToFill()
+         
+            if let cgImage{
+                Image(decorative: cgImage, scale: 1, orientation: .leftMirrored)
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+            }
                 
             
             Button {
@@ -46,6 +62,20 @@ struct PhotoPreview: View {
 
         }
         .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        .onAppear {
+            guard let soundURL = Bundle.main.url(forResource: "cika", withExtension: "m4a") else {
+              return
+            }
+
+            do {
+                self.player = try AVAudioPlayer(contentsOf: soundURL)
+            } catch {
+              print("Failed to load the sound: \(error)")
+            }
+            player?.play()
+            vibrate = true
+        }
+        
 
             
     }
